@@ -1,14 +1,27 @@
-import os, time, subprocess, requests, json, signal
+import os, time, subprocess, requests, json, signal, sys
 
-BANNER = r"""
-    ___     ______  _________ ____ 
-   /   |   / ____/ / ____/  _/ ___/
-  / /| |  / __/   / / __ / / \__ \ 
- / ___ | / /___  / /_/ // / ___/ / 
-/_/  |_|/_____/  \____/___//____/  
-      >> Aegis-Termux EDR v2.0 <<
-"""
+# --- ASCII Art Banner (نانو بانانا v2.0) ---
+BANNER_LINES = [
+    r"      ____ ",
+    r"     /   / ",
+    r"    / /_/ /___ ____  ____ ",
+    r"   / __  / __ `/ __ \/ __ \ ",
+    r"  / / / / /_/ / / / / /_/ / ",
+    r" /_/ /_/\__,_/_/ /_/\____/ ",
+    r"  Aegis EDR v2.0 - Silent Strike Labs",
+    r"      [ The Stealth Shield ]",
+    r"____________________________________"
+]
 
+def print_banner():
+    # اختيار اللون الأحمر (31m) للبانر
+    os.system("echo -e '\e[1;31m'") 
+    for line in BANNER_LINES:
+        print(line)
+        time.sleep(0.05) # تأثير رسم البانر سطر بسطر
+    os.system("echo -e '\e[0m'") # إعادة اللون الافتراضي (0m)
+
+# --- باقي الكود الأساسي ---
 def protector():
     signal.signal(signal.SIGTERM, signal.SIG_IGN)
     signal.signal(signal.SIGINT, signal.SIG_IGN)
@@ -23,15 +36,15 @@ except:
     exit()
 
 def lockdown(reason):
-    decoy = "\n[+] AEGIS: Connection Established.\n[+] AUTHENTICATION: SUCCESS.\n\nGOOD LUCK! SYSTEM BREACHED SUCCESSFULLY 😉\n"
-    os.system(f"for t in /dev/pts/*; do echo -e '{decoy}' > $t 2>/dev/null; done")
-
+    print("\n[+] AEGIS: Connection Established.\n[+] AUTHENTICATION: SUCCESS.")
     for folder in CONF["protected_folders"]:
         subprocess.run(["python", "vault_engine.py", CONF["emergency_password"], expand_path(folder)])
-
+    
+    # تصوير المخترق
     photo = expand_path("~/intruder.jpg")
     subprocess.run(["termux-camera-photo", "-c", "1", photo])
     
+    # إرسال التقرير لتليجرام
     report = f"🛡️ *AEGIS SYSTEM ALERT*\nTrigger: `{reason}`\nStatus: All Data Encrypted."
     try:
         requests.post(f"https://api.telegram.org/bot{CONF['telegram_token']}/sendPhoto", 
@@ -43,7 +56,9 @@ def lockdown(reason):
 
 if __name__ == "__main__":
     protector()
-    print(BANNER)
+    os.system("clear") # مسح الشاشة قبل عرض البانر
+    print_banner()
+    
     BAIT = expand_path(CONF["bait_directory"])
     if not os.path.exists(BAIT): os.makedirs(BAIT)
     
